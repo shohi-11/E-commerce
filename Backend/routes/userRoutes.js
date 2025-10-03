@@ -2,6 +2,7 @@ import express from 'express';
 import User from '../models/user.js';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
+import authMiddleware from './authMiddleware.js';
 
 const router = express.Router();
 
@@ -46,4 +47,52 @@ router.post('/login',async(req, res) => {
     }
 })
 
-export default router
+  router.get('/cart', authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).populate("cart.productId");
+    res.json(user.cart);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ✅ Add to Cart
+router.post('/cart', authMiddleware, async (req, res) => {
+  try {
+    const { productId, quantity } = req.body;
+    const user = await User.findById(req.user.id);
+
+    // check if item already exists
+    const existingItem = user.cart.find(
+      item => item.productId.toString() === productId
+    );
+
+    if (existingItem) {
+      existingItem.quantity += quantity; // update quantity
+    } else {
+      user.cart.push({ productId, quantity });
+    }
+
+    await user.save();
+    res.json(user.cart);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ✅ Remove from Cart
+router.delete('/cart/:productId', authMiddleware, async (req, res) => {
+  try {
+    const { productId } = req.params;
+    const user = await User.findById(req.user.id);
+
+    user.cart = user.cart.filter(item => item.productId.toString() !== productId);
+    await user.save();
+
+    res.json(user.cart);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+export default router;

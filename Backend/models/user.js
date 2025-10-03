@@ -1,6 +1,20 @@
 import mongoose from "mongoose";
 import bcrypt from 'bcryptjs';
 
+
+// Define schema for items inside cart
+const cartItemSchema = new mongoose.Schema({
+  productId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Product",  // reference to Product model
+    required: true,
+  },
+  quantity: {
+    type: Number,
+    default: 1,
+  },
+});
+
 const userSchema = new mongoose.Schema({
     name:{
         type:String,
@@ -20,7 +34,8 @@ const userSchema = new mongoose.Schema({
         enum: ['user','admin'],
         default: 'user'
     },
-    
+    cart: [cartItemSchema]   // ✅ NEW FIELD
+
 },{ timestamps: true})
 
 userSchema.pre('save',async function (next){
