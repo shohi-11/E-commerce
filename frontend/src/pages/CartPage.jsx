@@ -33,7 +33,7 @@ function CartPage() {
 
     try {
       await API.post(
-        "/orders",
+        "/api/orders",
         { userId, products: cartItems, total: totalPrice },
         { headers: { Authorization: `Bearer ${token}` } }
       );
